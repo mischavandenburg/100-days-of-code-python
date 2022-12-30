@@ -1,5 +1,6 @@
 import turtle
 import pandas
+from icecream import ic
 
 # set up screen and turtle
 screen = turtle.Screen()
@@ -10,7 +11,9 @@ turtle.shape(image)
 
 # read the data
 data = pandas.read_csv("50_states.csv")
+all_states = data.state.to_list()
 score = 0
+guessed_states = []
 
 
 def create_turtle(state):
@@ -30,19 +33,29 @@ def create_turtle(state):
     text.write(state_name, move=False, align="left")
 
 
-running = True
-while running:
+while len(guessed_states) < 50:
 
     user_answer = screen.textinput(title=f"{score}/50 States Correct",
-                                   prompt="What's another state's name?")
+                                   prompt="What's another state's name?").title()
 
-    key = user_answer.title()
+    if user_answer == "Exit":
+        break
 
     # if the user input exists in the series, create a new turtle
     # and update the score
-    if data.state.isin([key]).any():
-        row = data[data.state == key]
+    if user_answer in all_states:
+        guessed_states.append(user_answer)
+        ic(guessed_states)
+        row = data[data.state == user_answer]
         create_turtle(row)
         score += 1
+        if score == 50:
+            running = False
+            print("You win, Game Over")
+            break
 
-screen.exitonclick()
+# write the states the user did not guess to a csv file
+with open("states_to_learn.csv", "w") as f:
+    for state in all_states:
+        if state not in guessed_states:
+            f.write(f"{state}\n")
